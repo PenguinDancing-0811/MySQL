@@ -1,0 +1,191 @@
+mysql> USE Testing_System;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+mysql> SELECT DepartmentName from Department;
++----------------+
+| DepartmentName |
++----------------+
+| Maths          |
+| Physics        |
+| English        |
+| Chemist        |
+| Literature     |
+| History        |
+| Geography      |
+| Informatics    |
+| PE             |
+| Music          |
+| Art            |
++----------------+
+11 rows in set (0.00 sec)
+
+mysql> SELECT DepartmentID from Department WHERE Department = 'Chem';
+ERROR 1054 (42S22): Unknown column 'Department' in 'where clause'
+mysql> 
+mysql> SELECT DepartmentID from Department WHERE DepartmentName = 'Chemist';
++--------------+
+| DepartmentID |
++--------------+
+|            4 |
++--------------+
+1 row in set (0.00 sec)
+
+mysql> SELECT * FROM Account ORDER BY FullName DESC LIMIT 1;
++-----------+---------------+----------+----------+--------------+------------+------------+
+| AccountID | Email         | Username | FullName | DepartmentID | PositionID | CreateDate |
++-----------+---------------+----------+----------+--------------+------------+------------+
+|        11 | art@teach.edu | Tay      | Tay Yat  |           11 |         10 | 2025-10-22 |
++-----------+---------------+----------+----------+--------------+------------+------------+
+1 row in set (0.00 sec)
+
+mysql> SELECT FullName FROM Account;
++------------+
+| FullName   |
++------------+
+| Matha Mat  |
+| Phy Py     |
+| Chem Chem  |
+| Lin Ling   |
+| Geoff      |
+| Devi       |
+| Russ Russo |
+| Pepe Pe    |
+| Epi        |
+| Musi Music |
+| Tay Yat    |
++------------+
+11 rows in set (0.00 sec)
+
+mysql> SELECT * FROM Account
+    -> WHERE CHAR_LENGTH(FullName) = (
+    -> SELECT MAX(CHAR_LENGTH(FullName)) FROM Account);
++-----------+-------------+----------+------------+--------------+------------+------------+
+| AccountID | Email       | Username | FullName   | DepartmentID | PositionID | CreateDate |
++-----------+-------------+----------+------------+--------------+------------+------------+
+|         7 | Russ@gg.com | Russ     | Russ Russo |            8 |          8 | 2025-10-22 |
+|        10 | mu@musi.vn  | Mu       | Musi Music |           10 |         11 | 2025-10-22 |
++-----------+-------------+----------+------------+--------------+------------+------------+
+2 rows in set (0.00 sec)
+
+mysql> SELECT * FROM Account
+    -> WHERE CHAR_LENGTH(FullName) = (
+    -> SELECT MAX(CHAR_LENGTH(FullName)) FROM Account) AND DeparmentID == 4;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '== 4' at line 3
+mysql> SELECT * FROM Account
+    -> WHERE CHAR_LENGTH(FullName) = (
+    -> SELECT MAX(CHAR_LENGTH(FullName)) FROM Account) AND DeparmentID = 4;
+ERROR 1054 (42S22): Unknown column 'DeparmentID' in 'where clause'
+mysql> SELECT * FROM Account WHERE CHAR_LENGTH(FullName) = ( SELECT MAX(CHAR_LENGTH(FullName)) FROM Account) AND DeparmentID = 8;
+ERROR 1054 (42S22): Unknown column 'DeparmentID' in 'where clause'
+mysql> SELECT * FROM Account WHERE CHAR_LENGTH(FullName) = ( SELECT MAX(CHAR_LENGTH(FullName)) FROM Account) AND DepartmentID = 8;
++-----------+-------------+----------+------------+--------------+------------+------------+
+| AccountID | Email       | Username | FullName   | DepartmentID | PositionID | CreateDate |
++-----------+-------------+----------+------------+--------------+------------+------------+
+|         7 | Russ@gg.com | Russ     | Russ Russo |            8 |          8 | 2025-10-22 |
++-----------+-------------+----------+------------+--------------+------------+------------+
+1 row in set (0.00 sec)
+
+mysql> SELECT * FROM `Group` WHERE CreateDate < '2019/12/20';
+Empty set, 1 warning (0.00 sec)
+
+mysql> SELECT CreateDate FROM `Group`;
++------------+
+| CreateDate |
++------------+
+| 2025-10-22 |
+| 2025-10-22 |
+| 2025-10-22 |
+| 2025-10-22 |
+| 2025-10-22 |
+| 2025-10-22 |
+| 2025-10-22 |
+| 2025-10-22 |
++------------+
+8 rows in set (0.00 sec)
+
+mysql> SELECT QuestionID FROM Answer GROUP BY QuestionID HAVING COUNT(*) > 3;
+Empty set (0.00 sec)
+
+mysql> SELECT QuestionID FROM Answer GROUP BY QuestionID HAVING COUNT(*) > 2;
++------------+
+| QuestionID |
++------------+
+|          2 |
++------------+
+1 row in set (0.00 sec)
+
+mysql> SELECT ExamID FROM Exam WHERE Duration >= '1:00:00' AND CreateDate < '2004/12/20';
+Empty set, 1 warning (0.00 sec)
+
+mysql> SELECT ExamID FROM Exam WHERE Duration >= '1:00:00' AND CreateDate > '2004/12/20';
++--------+
+| ExamID |
++--------+
+|     12 |
+|     14 |
+|     16 |
+|     19 |
++--------+
+4 rows in set, 1 warning (0.00 sec)
+
+mysql> SELECT GroupID, GroupName FROM `Group` 
+    -> WHERE CreateDate = (
+    -> SELECT MAX(CreateDate) FROM `Group`);
++---------+-----------+
+| GroupID | GroupName |
++---------+-----------+
+|       1 | Phy       |
+|       2 | Lyr       |
+|       3 | Art       |
+|       4 | Lin       |
+|       5 | Geo       |
+|       6 | Che1      |
+|       7 | Che2      |
+|       8 | Arty      |
++---------+-----------+
+8 rows in set (0.01 sec)
+
+mysql> SELECT COUNT(*) FROM Account 
+    -> GROUP BY DepartmentID
+    -> HAVING DepartmentID = 2;
++----------+
+| COUNT(*) |
++----------+
+|        1 |
++----------+
+1 row in set (0.00 sec)
+
+mysql> SELECT FullName FROM Account
+    -> WHERE FullName LIKE 'M%c';
++------------+
+| FullName   |
++------------+
+| Musi Music |
++------------+
+1 row in set (0.00 sec)
+
+mysql> DELETE FROM Exam WHERE CreateDate < '2019/12/20';
+Query OK, 0 rows affected, 1 warning (0.01 sec)
+
+mysql> DELETE FROM Question WHERE Content LIKE 'Question%';
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> UPDATE Account
+    -> SET FullName = 'Nguyen Ba Loc', Email = 'loc.nguyenba@vti.com.vn'
+    -> WHERE AccountID = 5;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> UPDATE Account
+    -> \c
+mysql> UPDATE `Group`
+    -> \c
+mysql> UPDATE GroupAccount
+    -> SET GroupID = 4
+    -> WHERE AccountID = 5;
+Query OK, 0 rows affected (0.00 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+mysql> EXIT;
