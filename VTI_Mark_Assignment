@@ -1,0 +1,201 @@
+mysql> CREATE DATABSE VTI_Mark_Management;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'DATABSE VTI_Mark_Management' at line 1
+mysql> CREATE DATABASE VTI_Mark_Management;
+Query OK, 1 row affected (0.03 sec)
+
+mysql> USE VTI_Mark_Management;
+Database changed
+mysql> CREATE TABLE Trainee (
+    -> Trainee_ID TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    -> First_Name VARCHAR(50) NOT NULL,
+    -> Last_Name VARCHAR(30) NOT NULL,
+    -> Age TINYINT UNSIGNED NOT NULL,
+    -> Gender ENUM('Male', 'Female', 'Unknown') NOT NULL);
+Query OK, 0 rows affected (0.05 sec)
+
+mysql> CREATE TABLE Subject (
+    -> Subject_ID TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    -> Subject_Name ENUM('MySQL', 'JavaCore', 'FrontEnd Basic', 'Spring Framework', 'FrontEnd Advance', 'Mock Project', 'Machine', 'Python') NOT NULL);
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> CREATE TABLE Trainee_Subject (
+    -> Trainee_ID TINYINT UNSIGNED,
+    -> FOREIGN KEY (Trainee_ID) REFERENCES Trainee(Trainee_ID),
+    -> Subject_ID TINYINT UNSIGNED,
+    -> FOREIGN KEY (Subject_ID) REFERENCES Subject(Subject_ID),
+    -> Mark TINYINT UNSIGNED,
+    -> Exam_Day DATE DEFAULT(CURRENT_DATE()));
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> INSERT INTO Trainee (First_Name, Last_Name, Age, Gender) VALUES 
+    -> ('Dieu Linh', 'Nguyen', 23, 'Female'),
+    -> ('The Van', 'Nguyen', 47, 'Male'),
+    -> ('Thi Thu Huong', 'Pham', 41, 'Female'),
+    -> ('Gia Hien', 'Nguyen', 18, 'Male');
+Query OK, 4 rows affected (0.01 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO Subject (Subject_Name) VALUES
+    -> ('Python'),
+    -> ('Java'),
+    -> ('\c
+    '> \c
+    '> '
+    -> \c
+mysql> INSERT INTO Subject (Subject_Name) VALUES ('Python'), ('Javacore'), ('MySQL'), ('FrontEnd Basic'), ('Mock Project'), ('Spring Framework'), ('Machine');
+Query OK, 7 rows affected (0.01 sec)
+Records: 7  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO Trainee_Subject (Trainee_ID, Subject_ID, Mark, Exam_Day) VALUES 
+    -> (1, 2, 5, '2001/11/08'),
+    -> (3, 5, 6, '2020/12/28'),
+    -> (4, 7, 9, DEFAULT),
+    -> (2, 3, NULL, '2005/08/05'),
+    -> (1, 6, 4, DEFAULT),
+    -> (2, 1, 7, '2003/12/06'),
+    -> (3, 1, 9, DEFAULT);
+Query OK, 7 rows affected, 4 warnings (0.01 sec)
+Records: 7  Duplicates: 0  Warnings: 4
+
+mysql> SELECT s.Subject_ID, s.Subject_Name
+    -> FROM Subject s
+    -> LEFT JOIN Trainee_Subject ts on ts.Subject_ID = s.Subject_ID
+    -> WHERE ts.Mark = NULL;
+Empty set (0.00 sec)
+
+mysql> SELECT s.Subject_ID, s.Subject_Name FROM Subject s LEFT JOIN Trainee_Subject ts on ts.Subject_ID = s.Subject_ID WHERE ts.Mark IS NULL;
++------------+----------------+
+| Subject_ID | Subject_Name   |
++------------+----------------+
+|          3 | MySQL          |
+|          4 | FrontEnd Basic |
++------------+----------------+
+2 rows in set (0.00 sec)
+
+mysql> SELECT ts.Subject_ID, COUNT(*) AS number_of_mark
+    -> , s.Subject_Name 
+    -> FROM Trainee_Subject ts
+    -> LEFT JOIN Subject s ON ts.Subject_ID = s.Subject_ID
+    -> GROUP BY ts.Subject_ID
+    -> HAVING ts.number_of_mark >= 2;
+ERROR 1054 (42S22): Unknown column 'ts.number_of_mark' in 'having clause'
+mysql> SELECT ts.Subject_ID, COUNT(*) AS number_of_mark , s.Subject_Name  FROM Trainee_Subject ts LEFT JOIN Subject s ON ts.Subject_ID = s.Subject_ID GROUP BY ts.Subject_ID HAVING number_of_mark >=2;
++------------+----------------+--------------+
+| Subject_ID | number_of_mark | Subject_Name |
++------------+----------------+--------------+
+|          1 |              2 | Python       |
++------------+----------------+--------------+
+1 row in set (0.00 sec)
+
+mysql> CREATE VIEW TraineeInfo AS
+    -> SELECT
+    -> t.Trainee_ID, t.First_Name, t.Last_Name, t.Age, t.Gender, s.Subject_ID, s.Subject_Name, ts.Mark, ts.Exam_Day
+    -> FROM Trainee_Subject ts
+    -> LEFT JOIN Trainee t ON ts.Trainee_ID = t.Trainee_ID
+    -> JOIN Subject s ON ts.Subject_ID = s.Subject_ID;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> SELECT * FROM TraineeInfo;
++------------+---------------+-----------+------+--------+------------+------------------+------+------------+
+| Trainee_ID | First_Name    | Last_Name | Age  | Gender | Subject_ID | Subject_Name     | Mark | Exam_Day   |
++------------+---------------+-----------+------+--------+------------+------------------+------+------------+
+|          1 | Dieu Linh     | Nguyen    |   23 | Female |          2 | JavaCore         |    5 | 2001-11-08 |
+|          3 | Thi Thu Huong | Pham      |   41 | Female |          5 | Mock Project     |    6 | 2020-12-28 |
+|          4 | Gia Hien      | Nguyen    |   18 | Male   |          7 | Machine          |    9 | 2025-10-27 |
+|          2 | The Van       | Nguyen    |   47 | Male   |          3 | MySQL            | NULL | 2005-08-05 |
+|          1 | Dieu Linh     | Nguyen    |   23 | Female |          6 | Spring Framework |    4 | 2025-10-27 |
+|          2 | The Van       | Nguyen    |   47 | Male   |          1 | Python           |    7 | 2003-12-06 |
+|          3 | Thi Thu Huong | Pham      |   41 | Female |          1 | Python           |    9 | 2025-10-27 |
++------------+---------------+-----------+------+--------+------------+------------------+------+------------+
+7 rows in set (0.00 sec)
+
+mysql> DELIMITER $$
+mysql> CREATE TRIGGER SubjectUpdateID
+    -> AFTER UPDATE ON Subject
+    -> FOR EACH ROW
+    -> BEGIN
+    -> IF OLD.Subject_ID != NEW.Subject_ID THEN
+    -> UPDATE Trainee_Subject
+    -> SET Subject_ID = NEW.Subject_ID;
+    -> END IF;
+    -> END$$
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> SHOW TRIGGERS;
+    -> \c
+mysql> SHOW TRIGGERS LIKE 'Sub%';
+    -> SHOW CREATE TRIGGER SubjectUpdateID;
+    -> 
+    -> 
+    -> 
+    -> 
+    -> 
+    -> 
+    -> 
+    -> 
+    -> 
+    -> 
+    -> 
+    -> 
+    -> 
+    -> 
+    -> 
+    -> 
+    -> DELIMITER;
+    -> SHOW CREATE TRIGGER SubjectUpdateID;
+    -> \c
+mysql> DELIMITER $$
+mysql> CREATE TRIGGER SubjectUpdateID
+    -> AFTER UPDATE ON Subject
+    -> FOR EACH ROW
+    -> BEGIN
+    -> IF OLD.Subject_ID != NEW.Subject_ID THEN
+    -> UPDATE Trainee_Subject
+    -> SET Subject_ID = NEW.Subject_ID;
+    -> END IF;
+    -> END$$
+ERROR 1359 (HY000): Trigger already exists
+mysql> SHOW TRIGGERS LIKE 'Subj%';
+    -> \c
+mysql> SHOW TRIGGERS;
+    -> \c
+mysql> DROP TRIGGER IF EXISTS SubjectUpdateID;
+    -> \c
+mysql> DELIMITER;
+    -> DROP TRIGGERS IF EXISTS SubjectUpdateID;
+    -> SHOW TRIGGERS;
+    -> \c
+mysql> DROP TRIGGER IF EXISTS SubjectUpdateID$$;
+Query OK, 0 rows affected (0.03 sec)
+
+    -> SHOW TRIGGERS;
+    -> \c
+mysql> DELIMITER $$
+mysql> CREATE TRIGGER SubjectUpdateID
+    -> AFTER UPDATE ON Subject
+    -> FOR EACH ROW
+    -> BEGIN
+    -> IF OLD.Subject_ID != NEW>Subject_ID THEN
+    -> UPDATE Trainee_Subject
+    -> SET Subject_ID = NEW.Subject_ID
+    -> WHERE Subject_ID = OLD>Subject_ID;
+    -> END IF;
+    -> END$$
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> DELIMITER;
+    -> SHOW TRIGGERS;
+    -> ^C
+mysql> DELIMITER;
+    -> SHOW TRIGGERS;
+    -> ^C
+mysql> 
+mysql> SHOW TRIGGERS;
+    -> ^C
+mysql> SELECT DATABASE();
+    -> SHOW TRIGGERS;
+    -> ^C
+mysql> SHOW GRANTS;
+    -> ^C
+mysql> Terminal close -- exit!
+Aborted

@@ -1,0 +1,131 @@
+mysql> USE Testing_System;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+mysql> CREATE VIEW AS pe_people AS (
+    -> \c
+mysql> CREATE VIEW AS pe_people AS 
+    -> WITH pe_person AS (
+    -> SELECT AccountID, Email, Fullname, DepartmentID FROM Account)
+    -> SELECT pe.AccountID, pe.Email, pe.Fullname, d.DepartmentName
+    -> FROM pe_person pe
+    -> LEFT JOIN Department d ON pe.DepartmentID = d.DepartmentID
+    -> WHERE d.DepartmentName = 'PE';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'AS pe_people AS 
+WITH pe_person AS (
+SELECT AccountID, Email, Fullname, Departme' at line 1
+mysql> CREATE VIEW pe_people AS
+    -> WITH pe_person AS (
+    ->     SELECT AccountID, Email, Fullname, DepartmentID 
+    ->     FROM Account
+    -> )
+    -> SELECT 
+    ->     pe.AccountID, 
+    ->     pe.Email, 
+    ->     pe.Fullname, 
+    ->     d.DepartmentName
+    -> FROM 
+    ->     pe_person pe
+    ->     LEFT JOIN Department d ON pe.DepartmentID = d.DepartmentID
+    -> WHERE 
+    ->     d.DepartmentName = 'PE';
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> CREATE VIEW MostActiveGroupMembers AS
+    -> WITH count_times_join AS (
+    ->     SELECT 
+    ->         AccountID, 
+    ->         COUNT(*) AS times_join 
+    ->     FROM 
+    ->         GroupAccount 
+    ->     GROUP BY 
+    ->         AccountID
+    -> ),
+    -> max_count AS (
+    ->     SELECT 
+    ->         MAX(times_join) AS max_time 
+    ->     FROM 
+    ->         count_times_join
+    -> )
+    -> SELECT 
+    ->     c.AccountID,
+    ->     c.times_join,
+    ->     a.*
+    -> FROM 
+    ->     count_times_join c
+    ->     LEFT JOIN Account a ON c.AccountID = a.AccountID
+    ->     CROSS JOIN max_count m
+    -> WHERE 
+    ->     c.times_join = m.max_time;
+ERROR 1060 (42S21): Duplicate column name 'AccountID'
+mysql> CREATE VIEW AS most_active_person
+    -> WITH count_times_join AS ( SELECT AccountID, COUNT(*) AS times_join FROM GroupAccount GROUP BY AccountID), max_count AS ( SELECT MAX(times_join) AS max_time FROM count_times ) SELECT c.AccountID, c.times_join, a.* FROM count_times_join c LEFT JOIN Account a ON c.AccountID = a.AccountID JOIN max_count m ON c.times_join = m.max_time;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'AS most_active_person
+WITH count_times_join AS ( SELECT AccountID, COUNT(*) AS t' at line 1
+mysql> CREATE VIEW most_active_person AS WITH count_times_join AS ( SELECT AccountID, COUNT(*) AS times_join FROM GroupAccount GROUP BY AccountID), max_count AS ( SELECT MAX(times_join) AS max_time FROM count_times ) SELECT c.AccountID, c.times_join, a.* FROM count_times_join c LEFT JOIN Account a ON c.AccountID = a.AccountID JOIN max_count m ON c.times_join = m.max_time;
+ERROR 1146 (42S02): Table 'Testing_System.count_times' doesn't exist
+mysql> CREATE VIEW most_active_person AS WITH count_times_join AS ( SELECT AccountID, COUNT(*) AS times_join FROM GroupAccount GROUP BY AccountID), max_count AS ( SELECT MAX(times_join) AS max_time FROM count_times_join ) SELECT c.AccountID, c.times_join, a.* FROM count_times_join c LEFT JOIN Account a ON c.AccountID = a.AccountID JOIN max_count m ON c.times_join = m.max_time;
+ERROR 1060 (42S21): Duplicate column name 'AccountID'
+mysql> CREATE VIEW most_active_person AS WITH count_times_join AS ( SELECT AccountID, COUNT(*) AS times_join FROM GroupAccount GROUP BY AccountID), max_count AS ( SELECT MAX(times_join) AS max_time FROM count_times_join ) SELECT c.times_join, a.* FROM count_times_join c LEFT JOIN Account a ON c.AccountID = a.AccountID JOIN max_count m ON c.times_join = m.max_time;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> CREATE VIEW long_content AS
+    -> ^C
+mysql> ^C
+mysql> mysql> CREATE VIEW long_content AS
+    ->     -> DELETE q FROM Question q JOIN ( SELECT QuestionID, Content FROM Question
+    -> WHERE CHAR_LENGTH(Content) > 3) AS long_ques ON q.QuestionID = long_ques.QuestionID;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'mysql> CREATE VIEW long_content AS
+    -> DELETE q FROM Question q JOIN ( SELECT' at line 1
+mysql> 
+mysql> DELETE q FROM Question q JOIN ( SELECT QuestionID, Content FROM Question WHERE CHAR_LENGTH(Content) > 3) AS long_ques ON q.QuestionID = long_ques.QuestionID;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> CREATE VIEW largest_department AS
+    -> WITH count_people AS (
+    ->     SELECT 
+    ->         DepartmentID, 
+    ->         COUNT(AccountID) AS count 
+    ->     FROM 
+    ->         Account
+    ->     GROUP BY 
+    ->         DepartmentID
+    -> ),
+    -> max_count AS (
+    ->     SELECT 
+    ->         MAX(count) AS max_count 
+    ->     FROM 
+    ->         count_people
+    -> )
+    -> SELECT 
+    ->     c.DepartmentID,
+    ->     d.DepartmentName,
+    ->     c.count
+    -> FROM 
+    ->     count_people c
+    ->     LEFT JOIN Department d ON c.DepartmentID = d.DepartmentID
+    ->     INNER JOIN max_count m ON c.count = m.max_count;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> CREATE VIEW question_viewers_starting_with_a AS
+    -> WITH question_viewer AS (
+    ->     SELECT QuestionID, CreatorID, Content 
+    ->     FROM Question
+    -> ),
+    -> questioner AS (
+    ->     SELECT AccountID, FullName 
+    ->     FROM Account
+    ->     WHERE FullName LIKE 'a%'
+    -> )
+    -> SELECT 
+    ->     qv.QuestionID,
+    ->     qv.CreatorID,
+    ->     qv.Content,
+    ->     q.FullName
+    -> FROM 
+    ->     question_viewer qv
+    ->     RIGHT JOIN questioner q ON q.AccountID = qv.CreatorID;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> EXIT;
